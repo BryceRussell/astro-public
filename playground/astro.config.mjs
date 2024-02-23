@@ -24,7 +24,7 @@ export default defineConfig({
       {
         cwd: "src",
         dir: "custom",
-        copy: "before",
+        copy: "after",
         log: "verbose"
       },
     )

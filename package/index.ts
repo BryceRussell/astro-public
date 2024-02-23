@@ -11,6 +11,7 @@ type Prettify<T> = { [K in keyof T]: T[K]; } & {};
 export default function(...options: (string | Prettify<Option>)[]): AstroIntegration {
   let cwd: string
   let outDir: string;
+  let publicDir: string;
   let userOptions: Option[]
 
   return {
@@ -21,6 +22,8 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
         cwd = fileURLToPath(config.root.toString())
 
         outDir = fileURLToPath(config.outDir.toString())
+
+        publicDir = fileURLToPath(config.publicDir.toString())
 
        // Validate/Transform user options
         userOptions = options
@@ -67,13 +70,20 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
               // Create path relative to custom public dir
               const asset = resolve(option.dir, `.${req.url!}`)
               if (existsSync(asset)) {
-                // If asset path exists, return asset stream
-                if (option.log === "verbose") logger.info(`Found public asset:\t${req.url}\t${asset}`)
-                try {
-                  createReadStream(asset).pipe(res)
-                } catch {
-                  logger.warn(`Cannot stream asset:\t${req.url}\t${asset}`)
+                // Skip asset if it will be overwrriten by asset in real public dir
+                if (option.copy === "before" && existsSync(resolve(publicDir, `.${req.url!}`))) {
                   next()
+                } else {
+                  if (option.log === "verbose") {
+                    logger.info(`Found public asset:\t${req.url}\t${asset}`)
+                  }
+                  // Return asset stream
+                  try {
+                    createReadStream(asset).pipe(res)
+                  } catch {
+                    logger.warn(`Cannot stream asset:\t${req.url}\t${asset}`)
+                    next()
+                  }
                 }
               } else {
                 next()
