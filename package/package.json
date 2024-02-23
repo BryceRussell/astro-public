@@ -1,6 +1,6 @@
 {
   "name": "astro-public",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Add custom 'public' directories in Astro",
   "keywords": [
     "astro",
