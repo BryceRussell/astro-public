@@ -61,27 +61,31 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
         for (const option of userOptions) {
           // Handle static assets during dev
           server.middlewares.use('/', (req, res, next) => {
+            // Trim query params from path
+            const path = req.url?.replace(/\?.*$/, '')
+            console.log(req.url, path)
             // Check if url is a file/asset path
             if (
-              req.url
-              && extname(req.url)
-              && !req.url.startsWith('/@')
+              path
+              && extname(path)
+              && !path.startsWith('/@')
             ) {
+              console.log(path)
               // Create path relative to custom public dir
-              const asset = resolve(option.dir, `.${req.url!}`)
+              const asset = resolve(option.dir, `.${path!}`)
               if (existsSync(asset)) {
                 // Skip asset if it will be overwrriten by asset in real public dir
-                if (option.copy === "before" && existsSync(resolve(publicDir, `.${req.url!}`))) {
+                if (option.copy === "before" && existsSync(resolve(publicDir, `.${path!}`))) {
                   next()
                 } else {
                   if (option.log === "verbose") {
-                    logger.info(`Found public asset:\t${req.url}\t${asset}`)
+                    logger.info(`Found public asset:\t${path}\t${asset}`)
                   }
                   // Return asset stream
                   try {
                     createReadStream(asset).pipe(res)
                   } catch {
-                    logger.warn(`Cannot stream asset:\t${req.url}\t${asset}`)
+                    logger.warn(`Cannot stream asset:\t${path}\t${asset}`)
                     next()
                   }
                 }
