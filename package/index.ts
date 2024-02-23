@@ -8,9 +8,6 @@ import { AstroError } from 'astro/errors';
 
 type Prettify<T> = { [K in keyof T]: T[K]; } & {};
 
-// TODO
-//  - SSR?
-
 export default function(...options: (string | Prettify<Option>)[]): AstroIntegration {
   let cwd: string
   let userOptions: Option[]
