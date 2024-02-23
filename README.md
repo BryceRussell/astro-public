@@ -1,15 +1,15 @@
 # `astro-public`
 
-Add custom file based routing directories in Astro
+Add custom 'public' directories in Astro
 
 ```js
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import pages from 'astro-public';
+import publicDir from 'astro-public';
 
 export default defineConfig({
-  // Create 'page' directory at 'src/custom'
-  integrations: [pages('custom')],
+  // Creates a 'public' directory at '/static'
+  integrations: [publicDir('static')],
 });
 ```
 
