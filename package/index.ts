@@ -66,7 +66,7 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
               const asset = resolve(option.dir, `.${req.url!}`)
               if (existsSync(asset)) {
                 // If asset path exists, return asset stream
-                if (option.log = "verbose") logger.info(`Found public asset:\t${req.url}\t${asset}`)
+                if (option.log === "verbose") logger.info(`Found public asset:\t${req.url}\t${asset}`)
                 createReadStream(asset).pipe(res)
               } else {
                 next()
