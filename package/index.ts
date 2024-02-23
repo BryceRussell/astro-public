@@ -10,6 +10,7 @@ type Prettify<T> = { [K in keyof T]: T[K]; } & {};
 
 export default function(...options: (string | Prettify<Option>)[]): AstroIntegration {
   let cwd: string
+  let outDir: string;
   let userOptions: Option[]
 
   return {
@@ -18,36 +19,40 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
       'astro:config:setup': ({ config }) => {
         // Used to resolved relative 'cwd' defined by user
         cwd = fileURLToPath(config.root.toString())
+
+        outDir = fileURLToPath(config.outDir.toString())
+
        // Validate/Transform user options
         userOptions = options
-        .map(option => {
-          // Transform string options into objects
-          if (typeof option === 'string') {
-            option = {
-              dir: option
+          .map(option => {
+            // Transform string options into objects
+            if (typeof option === 'string') {
+              option = {
+                dir: option
+              }
             }
-          }
 
-          // Skip invalid options
-          if (!option || !option?.dir || typeof option?.dir !== "string") {
-            return
-          }
+            // Skip invalid options
+            if (!option || !option?.dir || typeof option?.dir !== "string") {
+              return
+            }
 
-          // Turn 'cwd' and 'dir' paths into absolute paths, handles relative paths
+            // Turn 'cwd' and 'dir' paths into absolute paths, handles relative paths
+            option.copy = option.copy || "before"
 
-          option.cwd = option.cwd || "./"
+            option.cwd = option.cwd || "./"
 
-          option.cwd = stringToDir(
-            isAbsolute(option.cwd) ? "./" : cwd,
-            option.cwd
-          )
-        
-          option.dir = stringToDir(option.cwd, option.dir)
+            option.cwd = stringToDir(
+              isAbsolute(option.cwd) ? "./" : cwd,
+              option.cwd
+            )
+          
+            option.dir = stringToDir(option.cwd, option.dir)
 
-          return option
-        })
-        // Filter out invalid options
-        .filter(option => Boolean(option)) as Option[]
+            return option
+          })
+          // Filter out invalid options
+          .filter(option => Boolean(option)) as Option[]
       },
       'astro:server:setup': ({ logger, server }) => {
         for (const option of userOptions) {
@@ -79,12 +84,25 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
           });
         }
       },
-      'astro:build:done': ({ logger, dir: output }) => {
+      'astro:build:setup': ({ logger }) => {
         for (const option of userOptions) {
+          if (option.copy !== "before") continue
           try {
             // Copy custom public dir into build output
-            if (option.log) logger.info("Copying directory into output: " + option.dir)
-            cpSync(option.dir, fileURLToPath(output.toString()), { recursive: true })
+            if (option.log) logger.info("Copying 'public' directory into build output: " + option.dir)
+            cpSync(option.dir, outDir, { recursive: true })
+          } catch {
+            logger.warn("Failed to copy public dir into output: " + option.dir)
+          } 
+        }
+      },
+      'astro:build:done': ({ logger }) => {
+        for (const option of userOptions) {
+          if (option.copy !== "after") continue
+          try {
+            // Copy custom public dir into build output
+            if (option.log) logger.info("Copying 'public' directory into build output: " + option.dir)
+            cpSync(option.dir, outDir, { recursive: true })
           } catch {
             logger.warn("Failed to copy public dir into output: " + option.dir)
           } 

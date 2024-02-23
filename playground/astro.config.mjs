@@ -7,10 +7,10 @@ export default defineConfig({
   integrations: [
     publicDir(
       // "custom",
-      {
-        dir: "custom",
-        log: "verbose"
-      }
+      // {
+      //   dir: "custom",
+      //   log: "verbose"
+      // },
       // {
       //   cwd: "src",
       //   dir: "custom",
@@ -21,6 +21,12 @@ export default defineConfig({
       //   dir: "custom",
       //   log: "verbose"
       // },
+      {
+        cwd: "src",
+        dir: "custom",
+        copy: "before",
+        log: "verbose"
+      },
     )
   ]
 });
