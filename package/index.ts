@@ -63,14 +63,12 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
           server.middlewares.use('/', (req, res, next) => {
             // Trim query params from path
             const path = req.url?.replace(/\?.*$/, '')
-            console.log(req.url, path)
             // Check if url is a file/asset path
             if (
               path
               && extname(path)
               && !path.startsWith('/@')
             ) {
-              console.log(path)
               // Create path relative to custom public dir
               const asset = resolve(option.dir, `.${path!}`)
               if (existsSync(asset)) {
