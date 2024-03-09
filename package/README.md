@@ -1,10 +1,19 @@
 # `astro-public`
 
-Add custom 'public' directories in Astro
+[![npm version](https://img.shields.io/npm/v/astro-public?labelColor=red&color=grey)](https://www.npmjs.com/package/astro-public)
+[![readme](https://img.shields.io/badge/README-blue)](https://github.com/BryceRussell/astro-public/tree/main/package)
 
-```sh
-npm i astro-pages
-```
+Add custom "public" directories for static assets in Astro
+
+### Why?
+
+1. Serve static assets from anywhere, including packages
+2. Have multiple static asset directories instead of only the default public directory
+3. Provide placeholder assets that can be overwritten by assets in Astro's public directory
+
+### Examples
+
+#### Use as an Integration
 
 ```js
 // astro.config.mjs
@@ -17,7 +26,42 @@ export default defineConfig({
 });
 ```
 
-### Adding multiple directories
+#### Use Inside an Integration
+
+```ts
+// package/index.ts
+import type { AstroIntegration } from "astro";
+import { addIntegration } from "astro-integration-kit";
+import publicDir from "astro-public";
+
+export default function myIntegration(): AstroIntegration {
+    return {
+        name: "my-integration",
+        hooks: {
+            "astro:config:setup": ({
+                updateConfig,
+                config,
+                logger,
+            }) => {
+
+                // Creates a 'public' directory at '/package/static'
+                addIntegration({
+                    integration: publicDir({
+                      dir: "static",
+                      cwd: import.meta.url
+                    }),
+                    updateConfig,
+                    config,
+                    logger,
+                })
+
+            }
+        }
+    }
+}
+```
+
+#### Adding multiple directories
 
 ```js
 // Creates a 'public' folder at '/static', and '/assets'
@@ -27,7 +71,7 @@ publicDir(
 )
 ```
 
-### Using custom `cwd`
+#### Using custom `cwd`
 
 ```js
 // Creates a 'public' folder at 'src/static'
@@ -39,7 +83,7 @@ publicDir(
 )
 ```
 
-### Change when assets get copied
+#### Change when assets get copied
 
 ```js
 // Assets will be copied before the build is generated
@@ -51,7 +95,7 @@ publicDir(
 )
 ```
 
-### Debug logging
+#### Debug logging
 
 ```js
 // Log all debug messages

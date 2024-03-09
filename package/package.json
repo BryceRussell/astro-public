@@ -1,31 +1,27 @@
 {
-  "name": "astro-public",
-  "version": "0.0.4",
-  "description": "Add custom 'public' directories in Astro",
-  "keywords": [
-    "astro",
-    "withastro",
-    "astro-integration"
-  ],
-  "author": "Bryce Russell",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/brycerussell/astro-public",
-    "directory": "package"
-  },
-  "bugs": "https://github.com/brycerussell/astro-public/issues",
-  "homepage": "https://github.com/brycerussell/astro-public",
-  "scripts": {},
-  "type": "module",
-  "exports": {
-    ".": "./index.ts",
-    "./types": "./types.ts"
-  },
-  "peerDependencies": {
-    "astro": "^4.4.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.20"
-  }
+	"name": "astro-public",
+	"version": "0.0.4",
+	"description": "Add custom 'public' directories in Astro",
+	"keywords": ["astro", "withastro", "astro-integration"],
+	"author": "Bryce Russell",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/brycerussell/astro-public",
+		"directory": "package"
+	},
+	"bugs": "https://github.com/brycerussell/astro-public/issues",
+	"homepage": "https://github.com/brycerussell/astro-public",
+	"scripts": {},
+	"type": "module",
+	"exports": {
+		".": "./index.ts",
+		"./types": "./types.ts"
+	},
+	"peerDependencies": {
+		"astro": "^4.4.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.25"
+	}
 }
