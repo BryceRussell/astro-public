@@ -3,9 +3,18 @@
   "private": true,
   "version": "0.0.1",
   "description": "",
-  "scripts": {},
+  "packageManager": "pnpm@8.15.2",
+  "scripts": {
+    "playground:dev": "pnpm --filter playground dev",
+    "docs:dev": "pnpm --filter docs dev",
+    "changeset": "changeset",
+    "lint": "biome check .",
+    "lint:fix": "biome check --apply ."
+  },
   "license": "MIT",
   "devDependencies": {
-    "astro": "^4.4.3"
+    "@biomejs/biome": "^1.6.0",
+    "@changesets/cli": "^2.27.1",
+    "astro": "^4.4.15"
   }
 }
