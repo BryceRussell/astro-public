@@ -20,9 +20,7 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
       'astro:config:setup': ({ config }) => {
         // Used to resolved relative 'cwd' defined by user
         cwd = fileURLToPath(config.root.toString())
-
         outDir = fileURLToPath(config.outDir.toString())
-
         publicDir = fileURLToPath(config.publicDir.toString())
 
        // Validate/Transform user options
@@ -40,15 +38,14 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
               return
             }
 
+            // Defaults
+            option.copy ||= "before"
+            option.cwd  ||= "./"
+
             // Turn 'cwd' and 'dir' paths into absolute paths, handles relative paths
-            option.copy = option.copy || "before"
-
-            option.cwd = option.cwd || "./"
-
-            option.cwd = stringToDir(
-              isAbsolute(option.cwd) ? "./" : cwd,
-              option.cwd
-            )
+            if (!isAbsolute(option.cwd)) {
+              option.cwd = stringToDir(cwd, option.cwd)
+            }
           
             option.dir = stringToDir(option.cwd, option.dir)
 
@@ -62,7 +59,7 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
           // Handle static assets during dev
           server.middlewares.use('/', (req, res, next) => {
             // Trim query params from path
-            const path = req.url?.replace(/\?.*$/, '')
+            const path = req.url?.replace(/\?[^?]*$/, '')
             // Check if url is a file/asset path
             if (
               path
@@ -72,27 +69,22 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
               // Create path relative to custom public dir
               const asset = resolve(option.dir, `.${path!}`)
               if (existsSync(asset)) {
-                // Skip asset if it will be overwrriten by asset in real public dir
-                if (option.copy === "before" && existsSync(resolve(publicDir, `.${path!}`))) {
+                // Skip asset if it will be overwrriten by asset in real public dir 
+                if (option.copy === "before" && existsSync(resolve(publicDir, `.${path!}`)))
                   next()
-                } else {
-                  if (option.log === "verbose") {
-                    logger.info(`Found public asset:\t${path}\t${asset}`)
-                  }
-                  // Return asset stream
-                  try {
-                    createReadStream(asset).pipe(res)
-                  } catch {
-                    logger.warn(`Cannot stream asset:\t${path}\t${asset}`)
-                    next()
-                  }
+
+                if (option.log === "verbose")
+                  logger.info(`Found static asset:\t${path}\t${asset}`)
+                
+                // Serve asset
+                try {
+                  createReadStream(asset).pipe(res)
+                } catch {
+                  logger.warn(`Failed to serve static asset:\t${path}\t${asset}`)
+                  next()
                 }
-              } else {
-                next()
-              }
-            } else {
-              next()
-            }
+              } else next()
+            } else next()
           });
         }
       },
@@ -128,7 +120,7 @@ export default function(...options: (string | Prettify<Option>)[]): AstroIntegra
 function stringToDir(base: string, path: string): string {
   // Check if path is string
   if (!path) {
-    throw new AstroError(`[astro-public]: Invalid path!`, `"${path}"`)
+    throw new AstroError(`Invalid path!`, `"${path}"`)
   }
 
   // Check if path is a file URL
@@ -148,7 +140,7 @@ function stringToDir(base: string, path: string): string {
 
   // Check if path exists
   if (!existsSync(path)) {
-    throw new AstroError(`[astro-public]: Path does not exist!`, `"${path}"`)
+    throw new AstroError(`Path does not exist!`, `"${path}"`)
   }
 
   return path
