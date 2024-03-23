@@ -3,58 +3,58 @@ import { dirname, extname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
 import { AstroError } from "astro/errors";
-import type { Option } from "./types";
+import { z } from "astro/zod";
 
-type Prettify<T> = { [K in keyof T]: T[K] } & {};
+export type Option = z.input<typeof OptionSchema>;
 
-export default function (...options: (string | Prettify<Option>)[]): AstroIntegration {
-	let cwd: string;
+const OptionSchema = z.object({
+	dir: z.string(),
+	cwd: z.string().default("./"),
+	copy: z.union([z.literal("before"), z.literal("after")]).default("before"),
+	log: z.union([z.literal("verbose"), z.literal("minimal"), z.boolean()]).default(false),
+});
+
+const OptionUnion = z.union([z.string().transform((option) => OptionSchema.parse({ dir: option })), OptionSchema]);
+
+export default function (...options: z.input<typeof OptionUnion>[]): AstroIntegration {
+	let rootDir: string;
 	let outDir: string;
 	let publicDir: string;
-	let userOptions: Option[];
+	let userOptions: z.infer<typeof OptionSchema>[];
 
 	return {
 		name: "astro-public",
 		hooks: {
-			"astro:config:setup": ({ config }) => {
-				// Used to resolved relative 'cwd' defined by user
-				cwd = fileURLToPath(config.root.toString());
+			"astro:config:setup": ({ config, logger }) => {
+				rootDir = fileURLToPath(config.root.toString());
 				outDir = fileURLToPath(config.outDir.toString());
 				publicDir = fileURLToPath(config.publicDir.toString());
 
-				// Validate/Transform user options
-				userOptions = options
-					.map((option) => {
-						// Transform string options into objects
-						if (typeof option === "string") {
-							option = {
-								dir: option,
-							};
-						}
+				const OptionArrayResolved = z
+					.array(
+						z.nullable(OptionUnion).transform((option) => {
+							if (!option) return option;
+							const dir = resolveDirectory(option.cwd, option.dir);
+							const cwd = resolveDirectory(rootDir, option.cwd);
+							if (!dir || !cwd) {
+								logger.warn(
+									`Skipping option, directory does not exist!\n\n\t${JSON.stringify(option, null, 4).replace(
+										/\n/g,
+										"\n\t",
+									)}\n`,
+								);
+								return null;
+							}
+							return Object.assign(option, { dir, cwd });
+						}),
+					)
+					.transform((options) => options.filter(Boolean));
 
-						// Skip invalid options
-						if (!option || !option?.dir || typeof option?.dir !== "string") {
-							return;
-						}
-
-						// Defaults
-						option.copy ||= "before";
-						option.cwd ||= "./";
-
-						// Turn 'cwd' and 'dir' paths into absolute paths, handles relative paths
-						if (!isAbsolute(option.cwd)) {
-							option.cwd = stringToDir(cwd, option.cwd);
-						}
-
-						option.dir = stringToDir(option.cwd, option.dir);
-
-						return option;
-					})
-					// Filter out invalid options
-					.filter((option) => Boolean(option)) as Option[];
+				userOptions = OptionArrayResolved.parse(options) as z.infer<typeof OptionSchema>[];
 			},
 			"astro:server:setup": ({ logger, server }) => {
 				for (const option of userOptions) {
+					if (option.log === "verbose") logger.info(`Watching "public" directory:\t${option.dir}`);
 					// Handle static assets during dev
 					server.middlewares.use("/", (req, res, next) => {
 						// Trim query params from path
@@ -67,15 +67,14 @@ export default function (...options: (string | Prettify<Option>)[]): AstroIntegr
 								// Skip asset if it will be overwrriten by asset in real public dir
 								if (option.copy === "before" && existsSync(resolve(publicDir, `.${path!}`))) next();
 
-								if (option.log === "verbose") logger.info(`Found static asset:\t${path}\t${asset}`);
-
-								// Serve asset
 								try {
 									createReadStream(asset).pipe(res);
 								} catch {
 									logger.warn(`Failed to serve static asset:\t${path}\t${asset}`);
 									next();
 								}
+
+								if (option.log === "verbose") logger.info(`Found static asset:\t${path}\t${asset}`);
 							} else next();
 						} else next();
 					});
@@ -110,7 +109,7 @@ export default function (...options: (string | Prettify<Option>)[]): AstroIntegr
 }
 
 // Validates/transforms strings into absolute directory path
-function stringToDir(base: string, path: string): string {
+function resolveDirectory(base: string, path: string): string | null {
 	// Check if path is string
 	if (!path) {
 		throw new AstroError(`Invalid path!`, `"${path}"`);
@@ -132,9 +131,7 @@ function stringToDir(base: string, path: string): string {
 	}
 
 	// Check if path exists
-	if (!existsSync(path)) {
-		throw new AstroError(`Path does not exist!`, `"${path}"`);
-	}
+	if (!existsSync(path)) return null;
 
 	return path;
 }
