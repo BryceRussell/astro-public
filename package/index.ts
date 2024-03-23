@@ -37,13 +37,12 @@ export default function (...options: z.input<typeof OptionUnion>[]): AstroIntegr
 							const dir = resolveDirectory(option.cwd, option.dir);
 							const cwd = resolveDirectory(rootDir, option.cwd);
 							if (!dir || !cwd) {
-								if (option.log === "verbose")
-									logger.warn(
-										`Skipping option, directory does not exist!\n\n\t${JSON.stringify(option, null, 4).replace(
-											/\n/g,
-											"\n\t",
-										)}\n`,
-									);
+								logger.warn(
+									`Skipping option, directory does not exist!\n\n\t${JSON.stringify(option, null, 4).replace(
+										/\n/g,
+										"\n\t",
+									)}\n`,
+								);
 								return null;
 							}
 							return Object.assign(option, { dir, cwd });
