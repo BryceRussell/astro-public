@@ -1,8 +1,12 @@
 {
 	"name": "astro-public",
-	"version": "0.0.4",
+	"version": "0.1.0",
 	"description": "Add custom 'public' directories in Astro",
-	"keywords": ["astro", "withastro", "astro-integration"],
+	"keywords": [
+		"astro",
+		"withastro",
+		"astro-integration"
+	],
 	"author": "Bryce Russell",
 	"license": "MIT",
 	"repository": {
