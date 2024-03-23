@@ -6,6 +6,7 @@
 	"packageManager": "pnpm@8.15.2",
 	"scripts": {
 		"playground:dev": "pnpm --filter playground dev",
+		"playground:build": "pnpm --filter playground build",
 		"changeset": "changeset",
 		"lint": "biome check .",
 		"lint:fix": "biome check --apply ."
