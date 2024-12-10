@@ -1,5 +1,11 @@
 # astro-public
 
+## 0.1.1
+
+### Patch Changes
+
+- 40b4b91: Add Astro 5.0 as peer dependency
+
 ## 0.1.0
 
 ### Minor Changes
