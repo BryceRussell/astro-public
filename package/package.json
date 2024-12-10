@@ -23,7 +23,7 @@
 		"./types": "./types.ts"
 	},
 	"peerDependencies": {
-		"astro": "^4.4.0"
+		"astro": "^4.4.0||^5"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.25"
